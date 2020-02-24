@@ -1,6 +1,7 @@
 package aws_ses
 
 import (
+	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -44,6 +45,11 @@ func (s *SesMailer) Send(mail mail.Mail) error {
 		}
 		return nil
 	}
+	textContent := mail.GetTextContent()
+	htmlContent := mail.GetHtmlContent()
+	if (len(textContent) == 0) && (len(htmlContent) == 0) {
+		return errors.New("No body provided")
+	}
 	input := &ses.SendEmailInput{
 		Destination: &ses.Destination{
 			ToAddresses: GetToAddresses(mail.GetRecipients()),
@@ -52,11 +58,11 @@ func (s *SesMailer) Send(mail mail.Mail) error {
 			Body: &ses.Body{
 				Html: &ses.Content{
 					Charset: aws.String(defaultCharSet),
-					Data:    aws.String(string(mail.GetHtmlContent())),
+					Data:    aws.String(string(htmlContent)),
 				},
 				Text: &ses.Content{
 					Charset: aws.String(defaultCharSet),
-					Data:    aws.String(string(mail.GetTextContent())),
+					Data:    aws.String(string(textContent)),
 				},
 			},
 			Subject: &ses.Content{
