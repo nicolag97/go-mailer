@@ -1,4 +1,4 @@
-package mailer
+package go_mailer
 
 import "github.com/nicolag97/go-mailer/mail"
 

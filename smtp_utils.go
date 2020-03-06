@@ -1,4 +1,4 @@
-package smtp
+package go_mailer
 
 import (
 	"fmt"

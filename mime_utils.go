@@ -1,4 +1,4 @@
-package mailer
+package go_mailer
 
 const (
 	MimeTypePlain = "text/plain"

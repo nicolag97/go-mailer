@@ -1,12 +1,10 @@
-package smtp
+package go_mailer
 
 import (
 	"crypto/tls"
 	"errors"
 	"github.com/labstack/gommon/random"
 	"github.com/nicolag97/go-mailer/mail"
-	"github.com/nicolag97/go-mailer/mailer"
-	"github.com/nicolag97/go-mailer/mailer/raw_mailer"
 	"log"
 	"net/smtp"
 )
@@ -25,17 +23,17 @@ func (s *SmtpMailer) Send(mail mail.Mail) error {
 		return errors.New("No body provided")
 	}
 
-	ctx := raw_mailer.RawMailContext{
+	ctx := RawMailContext{
 		To:                  mail.GetRecipients(),
 		From:                mail.GetSender(),
 		Subject:             mail.GetSubject(),
 		MixedBoundary:       random.String(10),
 		AlternativeBoundary: random.String(10),
-		Parts: []raw_mailer.RawMsgPart{{ContentType: mailer.MimeTypePlain, Message: string(textContent)},
-			{ContentType: mailer.MimeTypeHtml, Message: string(htmlContent)}},
-		Attachments: raw_mailer.GetRawMailAttachments(mail.GetAttachments()),
+		Parts: []RawMsgPart{{ContentType: MimeTypePlain, Message: string(textContent)},
+			{ContentType: MimeTypeHtml, Message: string(htmlContent)}},
+		Attachments: GetRawMailAttachments(mail.GetAttachments()),
 	}
-	content, err := raw_mailer.RenderRawMail(ctx)
+	content, err := RenderRawMail(ctx)
 	if err != nil {
 		return err
 	}

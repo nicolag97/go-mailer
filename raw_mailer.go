@@ -1,4 +1,4 @@
-package raw_mailer
+package go_mailer
 
 import (
 	"bytes"

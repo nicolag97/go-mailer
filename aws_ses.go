@@ -1,4 +1,4 @@
-package aws_ses
+package go_mailer
 
 import (
 	"errors"
@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/labstack/gommon/random"
 	"github.com/nicolag97/go-mailer/mail"
-	"github.com/nicolag97/go-mailer/mailer"
-	"github.com/nicolag97/go-mailer/mailer/raw_mailer"
 )
 
 type SesMailer struct {
@@ -19,17 +17,17 @@ type SesMailer struct {
 
 func (s *SesMailer) Send(mail mail.Mail) error {
 	if len(mail.GetAttachments()) > 0 {
-		ctx := raw_mailer.RawMailContext{
+		ctx := RawMailContext{
 			To:                  mail.GetRecipients(),
 			From:                mail.GetSender(),
 			Subject:             mail.GetSubject(),
 			AlternativeBoundary: random.String(10),
 			MixedBoundary:       random.String(10),
-			Parts: []raw_mailer.RawMsgPart{{ContentType: mailer.MimeTypePlain, Message: string(mail.GetTextContent())},
-				{ContentType: mailer.MimeTypeHtml, Message: string(mail.GetHtmlContent())}},
-			Attachments: raw_mailer.GetRawMailAttachments(mail.GetAttachments()),
+			Parts: []RawMsgPart{{ContentType: MimeTypePlain, Message: string(mail.GetTextContent())},
+				{ContentType: MimeTypeHtml, Message: string(mail.GetHtmlContent())}},
+			Attachments: GetRawMailAttachments(mail.GetAttachments()),
 		}
-		content, err := raw_mailer.RenderRawMail(ctx)
+		content, err := RenderRawMail(ctx)
 		if err != nil {
 			return err
 		}

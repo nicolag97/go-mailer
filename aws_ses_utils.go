@@ -1,4 +1,4 @@
-package aws_ses
+package go_mailer
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

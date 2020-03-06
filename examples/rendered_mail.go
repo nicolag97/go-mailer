@@ -2,9 +2,9 @@ package examples
 
 import (
 	"fmt"
+	"github.com/nicolag97/go-mailer"
 	"github.com/nicolag97/go-mailer/mail"
 	"github.com/nicolag97/go-mailer/mail/rendered"
-	"github.com/nicolag97/go-mailer/mailer/smtp"
 	"io/ioutil"
 	"log"
 )
@@ -35,7 +35,7 @@ func TemplateFinder(template rendered.Template) []byte {
 }
 
 func SendRenderedEmailSmtp() {
-	Client, err := smtp.NewSmtpClient("smtp.example.com", "465", smtp.SmtpCredentials{
+	Client, err := go_mailer.NewSmtpClient("smtp.example.com", "465", go_mailer.SmtpCredentials{
 		Username: "test@example.com",
 		Password: "password",
 		Identity: "test@example.com",

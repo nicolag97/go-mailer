@@ -2,15 +2,14 @@ package examples
 
 import (
 	"fmt"
+	"github.com/nicolag97/go-mailer"
 	"github.com/nicolag97/go-mailer/mail"
 	"github.com/nicolag97/go-mailer/mail/simple"
-	"github.com/nicolag97/go-mailer/mailer/aws_ses"
-	"github.com/nicolag97/go-mailer/mailer/smtp"
 	"log"
 )
 
 func SendSampleMailSmtp() {
-	Client, err := smtp.NewSmtpClient("smtp.example.com", "465", smtp.SmtpCredentials{
+	Client, err := go_mailer.NewSmtpClient("smtp.example.com", "465", go_mailer.SmtpCredentials{
 		Username: "test@example.com",
 		Password: "password",
 		Identity: "test@example.com",
@@ -18,13 +17,13 @@ func SendSampleMailSmtp() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	mail := simple.SimpleMail{
+	Mail := simple.SimpleMail{
 		Sender: mail.Subject{
 			Name: "Example",
 			Mail: "test@example.com",
 		},
-		Html: []byte("<b>Hi, I'm a test mail in HTML.</b>"),
-		Text: []byte("Hi, I'm a test mail in plain text."),
+		Html: []byte("<b>Hi, I'm a test Mail in HTML.</b>"),
+		Text: []byte("Hi, I'm a test Mail in plain text."),
 		Recipients: []mail.Subject{
 			{
 				Name: "TestFoo",
@@ -37,7 +36,7 @@ func SendSampleMailSmtp() {
 		},
 		Subject: "Hi, I'm a a test Email.",
 	}
-	err = Client.Send(&mail)
+	err = Client.Send(&Mail)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -46,7 +45,7 @@ func SendSampleMailSmtp() {
 }
 
 func SendSampleMailSES() {
-	Client, err := aws_ses.NewSesMailer("TestUsername", "TestPassword", "TestRegion")
+	Client, err := go_mailer.NewSesMailer("TestUsername", "TestPassword", "TestRegion")
 	if err != nil {
 		log.Fatal(err)
 	}
