@@ -1,5 +1,7 @@
 package mail
 
+import "context"
+
 type Subject struct {
 	Name string
 	Mail string
@@ -13,8 +15,8 @@ type Attachment struct {
 
 type Mail interface {
 	GetSender() Subject
-	GetHtmlContent() []byte
-	GetTextContent() []byte
+	GetHtmlContent(ctx context.Context) []byte
+	GetTextContent(ctx context.Context) []byte
 	GetRecipients() []Subject
 	GetSubject() string
 	GetAttachments() []Attachment

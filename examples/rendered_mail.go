@@ -12,19 +12,25 @@ import (
 func TemplateFinder(template rendered.Template) []byte {
 	switch template.Type {
 	case rendered.TemplateTypeHtml:
-		file, err := ioutil.ReadFile(fmt.Sprintf("templates/html/%v", template.Name))
+		file, err := ioutil.ReadFile(fmt.Sprintf("templates/html/%v", fmt.Sprintf(template.Name, "html")))
 		if err != nil {
 			return []byte("")
 		}
 		return file
 	case rendered.TemplateTypeText:
-		file, err := ioutil.ReadFile(fmt.Sprintf("templates/text/%v", template.Name))
+		file, err := ioutil.ReadFile(fmt.Sprintf("templates/text/%v", fmt.Sprintf(template.Name, "text")))
 		if err != nil {
 			return []byte("")
 		}
 		return file
-	case rendered.TemplateTypeHtmlLayout, rendered.TemplateTypeTextLayout:
-		file, err := ioutil.ReadFile(fmt.Sprintf("templates/layout/%v", template.Name))
+	case rendered.TemplateTypeHtmlLayout:
+		file, err := ioutil.ReadFile(fmt.Sprintf("templates/layout/%v", fmt.Sprintf(template.Name, "html")))
+		if err != nil {
+			return []byte("")
+		}
+		return file
+	case rendered.TemplateTypeTextLayout:
+		file, err := ioutil.ReadFile(fmt.Sprintf("templates/layout/%v", fmt.Sprintf(template.Name, "text")))
 		if err != nil {
 			return []byte("")
 		}
@@ -59,10 +65,8 @@ func SendRenderedEmailSmtp() {
 			},
 		},
 		Subject:        "Hi, I'm a test email.",
-		HtmlLayout:     "layout.html.tmpl",
-		TextLayout:     "layout.text.tmpl",
-		HtmlTemplate:   "html.tmpl",
-		TextTemplate:   "text.tmpl",
+		Layout:         "layout.%v.tmpl",
+		Template:       "%v.tmpl",
 		TemplateFinder: TemplateFinder,
 		FuncMap:        nil,
 		ExtraData:      nil,

@@ -1,10 +1,13 @@
 package go_mailer
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"github.com/labstack/gommon/random"
 	"github.com/nicolag97/go-mailer/mail"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"net/smtp"
 )
@@ -15,15 +18,22 @@ type SmtpMailer struct {
 	client *smtp.Client
 }
 
-func (s *SmtpMailer) Send(mail mail.Mail) error {
-
-	textContent := mail.GetTextContent()
-	htmlContent := mail.GetHtmlContent()
+func (s *SmtpMailer) Send(ctx context.Context, mail mail.Mail) error {
+	var newSpan opentracing.Span
+	if parent := opentracing.SpanFromContext(ctx); parent != nil {
+		pctx := parent.Context()
+		tracer := parent.Tracer()
+		newSpan = tracer.StartSpan("SmtpMailer.Send", opentracing.ChildOf(pctx))
+		defer newSpan.Finish()
+	}
+	textContent := mail.GetTextContent(opentracing.ContextWithSpan(ctx, newSpan))
+	htmlContent := mail.GetHtmlContent(opentracing.ContextWithSpan(ctx, newSpan))
 	if (len(textContent) == 0) && (len(htmlContent) == 0) {
+		newSpan.LogEvent("[ERROR]: No body provided")
 		return errors.New("No body provided")
 	}
 
-	ctx := RawMailContext{
+	MailCtx := RawMailContext{
 		To:                  mail.GetRecipients(),
 		From:                mail.GetSender(),
 		Subject:             mail.GetSubject(),
@@ -33,31 +43,37 @@ func (s *SmtpMailer) Send(mail mail.Mail) error {
 			{ContentType: MimeTypeHtml, Message: string(htmlContent)}},
 		Attachments: GetRawMailAttachments(mail.GetAttachments()),
 	}
-	content, err := RenderRawMail(ctx)
+	content, err := RenderRawMail(MailCtx)
 	if err != nil {
+		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	defer s.client.Quit()
 	err = s.client.Mail(mail.GetSender().Mail)
 	if err != nil {
+		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	for _, v := range mail.GetRecipients() {
 		err = s.client.Rcpt(v.Mail)
 		if err != nil {
+			newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 			return err
 		}
 	}
 	w, err := s.client.Data()
 	if err != nil {
+		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	_, err = w.Write(content)
 	if err != nil {
+		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	err = w.Close()
 	if err != nil {
+		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	return nil

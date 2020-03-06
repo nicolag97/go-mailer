@@ -1,7 +1,10 @@
 package go_mailer
 
-import "github.com/nicolag97/go-mailer/mail"
+import (
+	"context"
+	"github.com/nicolag97/go-mailer/mail"
+)
 
 type MailClient interface {
-	Send(mail mail.Mail) error
+	Send(ctx context.Context, Mail mail.Mail) error
 }
