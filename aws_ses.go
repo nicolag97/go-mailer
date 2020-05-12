@@ -85,6 +85,7 @@ func (s *SesMailer) Send(ctx context.Context, mail mail.Mail) error {
 		Source: aws.String(mail.GetSender().Mail),
 	}
 	amzSpan := opentracing.StartSpan("AwsSVC.SendEmail", opentracing.ChildOf(newSpan.Context()))
+	defer amzSpan.Finish()
 	_, err := s.AwsSVC.SendEmail(input)
 	if err != nil {
 		amzSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
