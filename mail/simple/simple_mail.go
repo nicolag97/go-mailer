@@ -1,6 +1,9 @@
 package simple
 
-import "github.com/nicolag97/go-mailer/mail"
+import (
+	"context"
+	"github.com/nicolag97/go-mailer/mail"
+)
 
 type SimpleMail struct {
 	Sender      mail.Subject
@@ -15,11 +18,11 @@ func (s *SimpleMail) GetSender() mail.Subject {
 	return s.Sender
 }
 
-func (s *SimpleMail) GetHtmlContent() []byte {
+func (s *SimpleMail) GetHtmlContent(ctx context.Context) []byte {
 	return s.Html
 }
 
-func (s *SimpleMail) GetTextContent() []byte {
+func (s *SimpleMail) GetTextContent(ctx context.Context) []byte {
 	return s.Text
 }
 
