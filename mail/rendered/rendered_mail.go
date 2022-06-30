@@ -3,9 +3,7 @@ package rendered
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/nicolag97/go-mailer/mail"
-	"github.com/opentracing/opentracing-go"
 	"text/template"
 )
 
@@ -40,27 +38,17 @@ func (r *RenderedMail) GetSender() mail.Subject {
 }
 
 func (r *RenderedMail) GetHtmlContent(ctx context.Context) []byte {
-	var newSpan opentracing.Span
-	if parent := opentracing.SpanFromContext(ctx); parent != nil {
-		pctx := parent.Context()
-		tracer := parent.Tracer()
-		newSpan = tracer.StartSpan("Mail.RenderHtml", opentracing.ChildOf(pctx))
-		defer newSpan.Finish()
-	}
 	htmlTmpl := r.TemplateFinder(Template{Name: r.Template, Type: TemplateTypeHtml})
 	if len(htmlTmpl) == 0 {
-		newSpan.LogEvent("[ERROR]: No body")
 		return []byte("")
 	}
 	tmpl, err := template.New(string(TemplateTypeHtml)).Funcs(r.FuncMap).Parse(string(htmlTmpl))
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	contentBuffer := bytes.NewBuffer(nil)
 	err = tmpl.Execute(contentBuffer, r.ExtraData)
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	htmlLayout := r.TemplateFinder(Template{Name: r.Layout, Type: TemplateTypeHtmlLayout})
@@ -69,7 +57,6 @@ func (r *RenderedMail) GetHtmlContent(ctx context.Context) []byte {
 	}
 	layoutTmpl, err := template.New(string(TemplateTypeHtmlLayout)).Funcs(r.FuncMap).Parse(string(htmlLayout))
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	layoutBuffer := bytes.NewBuffer(nil)
@@ -77,34 +64,23 @@ func (r *RenderedMail) GetHtmlContent(ctx context.Context) []byte {
 		Content string
 	}{Content: contentBuffer.String()})
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	return layoutBuffer.Bytes()
 }
 
 func (r *RenderedMail) GetTextContent(ctx context.Context) []byte {
-	var newSpan opentracing.Span
-	if parent := opentracing.SpanFromContext(ctx); parent != nil {
-		pctx := parent.Context()
-		tracer := parent.Tracer()
-		newSpan = tracer.StartSpan("Mail.RenderPlainText", opentracing.ChildOf(pctx))
-		defer newSpan.Finish()
-	}
 	textTmpl := r.TemplateFinder(Template{Name: r.Template, Type: TemplateTypeText})
 	if len(textTmpl) == 0 {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: No template"))
 		return []byte("")
 	}
 	tmpl, err := template.New(string(TemplateTypeHtml)).Funcs(r.FuncMap).Parse(string(textTmpl))
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	contentBuffer := bytes.NewBuffer(nil)
 	err = tmpl.Execute(contentBuffer, r.ExtraData)
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	textLayout := r.TemplateFinder(Template{Name: r.Layout, Type: TemplateTypeTextLayout})
@@ -113,7 +89,6 @@ func (r *RenderedMail) GetTextContent(ctx context.Context) []byte {
 	}
 	layoutTmpl, err := template.New(string(TemplateTypeTextLayout)).Funcs(r.FuncMap).Parse(string(textLayout))
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	layoutBuffer := bytes.NewBuffer(nil)
@@ -121,7 +96,6 @@ func (r *RenderedMail) GetTextContent(ctx context.Context) []byte {
 		Content string
 	}{Content: contentBuffer.String()})
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return []byte("")
 	}
 	return layoutBuffer.Bytes()

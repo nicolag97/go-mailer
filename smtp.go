@@ -4,10 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"github.com/labstack/gommon/random"
 	"github.com/nicolag97/go-mailer/mail"
-	"github.com/opentracing/opentracing-go"
 	"log"
 	"net/smtp"
 )
@@ -19,17 +17,9 @@ type SmtpMailer struct {
 }
 
 func (s *SmtpMailer) Send(ctx context.Context, mail mail.Mail) error {
-	var newSpan opentracing.Span
-	if parent := opentracing.SpanFromContext(ctx); parent != nil {
-		pctx := parent.Context()
-		tracer := parent.Tracer()
-		newSpan = tracer.StartSpan("SmtpMailer.Send", opentracing.ChildOf(pctx))
-		defer newSpan.Finish()
-	}
-	textContent := mail.GetTextContent(opentracing.ContextWithSpan(ctx, newSpan))
-	htmlContent := mail.GetHtmlContent(opentracing.ContextWithSpan(ctx, newSpan))
+	textContent := mail.GetTextContent(context.Background())
+	htmlContent := mail.GetHtmlContent(context.Background())
 	if (len(textContent) == 0) && (len(htmlContent) == 0) {
-		newSpan.LogEvent("[ERROR]: No body provided")
 		return errors.New("No body provided")
 	}
 
@@ -45,35 +35,29 @@ func (s *SmtpMailer) Send(ctx context.Context, mail mail.Mail) error {
 	}
 	content, err := RenderRawMail(MailCtx)
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	defer s.client.Quit()
 	err = s.client.Mail(mail.GetSender().Mail)
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	for _, v := range mail.GetRecipients() {
 		err = s.client.Rcpt(v.Mail)
 		if err != nil {
-			newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 			return err
 		}
 	}
 	w, err := s.client.Data()
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	_, err = w.Write(content)
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	err = w.Close()
 	if err != nil {
-		newSpan.LogEvent(fmt.Sprintf("[ERROR]: %v", err.Error()))
 		return err
 	}
 	return nil
